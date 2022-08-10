@@ -1,9 +1,9 @@
 <template>       
         <base-layout pageTitle="App Recepción">
-            <div id="nav">              
+           <!--  <div id="nav">              
               <ion-button :router-link="{ name: 'Productos' }">Click Me</ion-button>
-            </div>        
-            <form class="ion-padding" @submit="submitFrom">
+            </div>  -->       
+            <form class="ion-padding" @submit.prevent="submitFrom">
               <ion-list>
 
                   <ion-item>
@@ -29,11 +29,10 @@ import {
     IonList,
     IonInput,
     IonLabel,
+   
 } from "@ionic/vue";
-
 import { defineComponent } from "vue";
-
-
+import { useRouter } from 'vue-router';
 export default defineComponent({
   name: "App",
   components: {   
@@ -42,6 +41,7 @@ export default defineComponent({
     IonList,
     IonInput,
     IonLabel,
+    
   },
   data() {
     return {
@@ -56,10 +56,11 @@ export default defineComponent({
         user:this.entreUsuario,
         pass:this.entreContrasena,
       };
-      if(usuario.user=="adrian" && usuario.pass=="123")
-          console.log("Enviando datos de Autenticacion")
-          this.$router.replace('/productos');
-        
+    
+       if(usuario.user=="adrian" && usuario.pass=="123"){
+          console.log("Enviando datos de Autenticacion");
+          this.$router.push("/Productos");
+       }
           
     }
 

@@ -1,10 +1,10 @@
 <template>
     <base-layout pageTitle="Lista Productos" page-default-back-link="/Productos">
 
-        <div id="nav">   
+       <!--  <div id="nav">   
             <router-link to="/home">Home</router-link>
             <ion-button :router-link="{ name: 'Home' }">Click Me</ion-button>
-         </div>
+         </div> -->
             <ion-item>
               <ion-label  position="floating">Codigo</ion-label>
               <ion-input  type="text" required v-model="entreCodigo" placeholder="Entre el Codigo"/>
@@ -33,7 +33,7 @@
     IonLabel,
     alertController,
     IonInput,
-    IonButton,
+    //IonButton,
   
   } from '@ionic/vue';
  
@@ -47,7 +47,7 @@ import axios from "axios";
         IonItem,
         IonLabel,
         IonInput,
-        IonButton,
+        //IonButton,
        
     },
     data() {
