@@ -25,6 +25,8 @@ import './theme/variables.css';
 import './theme/Core.css';
 import BaseLayout from './Components/base/BaseLayout.vue';
 
+
+
 const app = createApp(App)
   .use(IonicVue)
   .use(router);

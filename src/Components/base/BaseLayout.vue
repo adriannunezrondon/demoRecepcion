@@ -10,13 +10,13 @@
             </ion-toolbar>
         </ion-header>
 
-        <ion-content :fullscreen="true">
-                       
+        <ion-content :fullscreen="true">                       
             <div id="container">                 
-                    <slot></slot>                    
+                <slot></slot>                    
             </div>
         </ion-content>
     </ion-page>
+   
 </template>
 
 <script lang="ts">
@@ -28,11 +28,11 @@ import{
     IonToolbar,
     IonBackButton,
     IonButtons,
-    
+   
 }from "@ionic/vue";
 
 export default{
-    props: ['pageTitle','pageDefaultBackLink'],
+    props: ['pageTitle','pageDefaultBackLink', 'mostrar'],
     components: {
     IonContent,
     IonHeader,
@@ -41,7 +41,11 @@ export default{
     IonToolbar,  
     IonBackButton,
     IonButtons, 
-    }
+    },
+    data() {
+        return {    
+        }; 
+  },
 }
 
 </script>

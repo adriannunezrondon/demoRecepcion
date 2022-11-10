@@ -8,15 +8,30 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/home',
   },
   {
-    path: '/home',
+    path: '/home/',
     name: 'Home',
+    props: true,
     component: () => import('@/views/Home.vue'),
   },
   {
-    path: '/productos',
-    name: 'Productos',
-    component: () => import('@/views/Productos.vue'),
+    path: '/sucursales',
+    name: 'Sucursales',
+    props:true,
+    component: () => import('@/views/Sucursales.vue'),
     
+  },
+  {
+    path: '/home/:sucursal',
+    name: 'Homep',
+    props:true,
+    component: () => import('@/views/Home.vue'),    
+  },
+
+  {
+    path: '/productos',
+    name: 'productos',
+    props:true,
+    component: () => import('@/views/Productos.vue'),    
   },
 ];
 
@@ -25,3 +40,5 @@ const router = createRouter({
   routes
 })
 export default router
+
+//API_URL = "http://localhost:3164/api";
