@@ -1,19 +1,19 @@
 <template>
    
-  <base-layout pageTitle="Elige una Sucursal" page-default-back-link="/sucursales"  >
+  <base-layout pageTitle="Elige una Sucursal" page-default-back-link="/sucursales">
     
     <ion-searchbar :debounce="1000" @ionChange="handleChange($event)"></ion-searchbar>        
-    <ion-list> 
+    <ion-list>     
         <ion-radio-group v-model="CodSucursal" @ionChange="handelSucursal($event)" >
-          <ion-row>
+          <ion-row>            
             <ion-col>
               <ion-item  v-for="sucursal in results" v-bind:key="sucursal.idsucursal">
                 <ion-label >{{ sucursal.sucursal }}</ion-label>
                 <ion-label>{{ sucursal.idsucursal }}</ion-label>
                 <ion-radio slot="start" :value="sucursal.idsucursal"></ion-radio>
               </ion-item>
-            </ion-col>
-          </ion-row>
+            </ion-col>             
+          </ion-row>          
         </ion-radio-group>
     </ion-list>
   
@@ -31,13 +31,15 @@
     IonRadioGroup,
     IonCol,
     IonRow,   
-    IonSearchbar, 
+    IonSearchbar,    
+    loadingController  
        
   } from '@ionic/vue';
  
 import { defineComponent, ref} from "vue";
 import axios from "axios";
-const API_URL = "http://9.39.252.72:6181/api";
+const API_URL = "http://9.39.252.247:6181/api";
+//const API_URL = "http://localhost:3164/api";
 
   export default defineComponent ({
     name: 'Prod',
@@ -49,11 +51,11 @@ const API_URL = "http://9.39.252.72:6181/api";
         IonRadioGroup,
         IonCol,
         IonRow,       
-        IonSearchbar,
+        IonSearchbar,        
     },
     props: {
-     'mostrar': String,
-    },
+    timeout: { type: Number, default: 2000},
+  },
     data() {
         return {
         listProductos:[{id:0, name:"",year:0,color:"", pantone_value:"" }],       
@@ -71,17 +73,71 @@ const API_URL = "http://9.39.252.72:6181/api";
         NombreSucursal:"",        
         objSucursal:{nombre:"",codigo:""},
         show:"",
+        data:[{idsucursal:"",sucursal:""}],
            
         }; 
   },
 
-  mounted() {      
-       this.CargarSucursales();
+  mounted() {
+       this.presentLoadingSucursales();       
        console.log(this.show);
-       console.log(this.mostrar);
+       
     },
 
   methods: {
+    async presentLoadingSucursales() {
+        const loading = await loadingController
+          .create({
+            cssClass: 'my-custom-class',
+            message: 'Espere por favor...',
+            //duration: this.timeout,            
+          });
+
+        await loading.present();
+        await this.CargarSucursales();     
+        setTimeout(() => {         
+        
+            if(this.data.length>1){
+                loading.dismiss();
+            }  
+            if(this.data.length===1){              
+              this.AlertCustomLoading();
+              loading.dismiss();
+            }
+
+          }, );
+      }, 
+
+      AlertCustomLoading() {
+      return alertController
+        .create({
+          header: 'Problemas con la conexión...', 
+          cssClass:'custom-alert',  
+
+          buttons: [            
+             {
+              text: 'Reintentar',
+              role: 'Reintentar',
+              cssClass: 'alert-button-enviarRM',
+                handler: () => {
+                  this.presentLoadingSucursales();
+                },
+              },                  
+              {
+              text: 'Cancel',
+              role: 'Cancel',
+              cssClass: 'alert-button-cancelRM',
+                handler: () => {
+                  //console.log(" Cancelando ....");
+                },
+            }, 
+          ]
+            
+        }).then(a => a.present())
+      
+      },
+   
+
     handelSucursal(event:any){
       this.ValorRadio();
     },   
@@ -91,17 +147,18 @@ const API_URL = "http://9.39.252.72:6181/api";
       this.results = this.listaSucursales.filter(p =>p.sucursal.toLowerCase().includes(query));
     },
 
-    CargarSucursales() {
-      console.log("LOG - ENTRENDO A CARGAR SUCURSALES");      
-      //api/articulos/getSucursalZona
-      axios.get(API_URL+"/articulos/getSucursalZona/")
+    async CargarSucursales() {
+      console.log("LOG - ENTRANDO A CARGAR SUCURSALES");
+
+      await axios.get(API_URL+"/articulos/getSucursalZona/")
         .then((response) => {          
           this.listaSucursales= response.data;
-          this.results=this.listaSucursales;
-          console.log("LOG -" + this.listaSucursales);
-           
+          this.results=this.listaSucursales; 
+          this.data=response.data; 
         })
-        .catch((error) => console.log("LOG-" + error));
+        .catch(
+          (error) => console.log("LOG-" + error)          
+          );
     },
     
     ValorRadio(){      
@@ -123,5 +180,7 @@ const API_URL = "http://9.39.252.72:6181/api";
 });
 </script>
 <style scoped>
+ 
+
 </style>
 

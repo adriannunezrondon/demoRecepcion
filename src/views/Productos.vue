@@ -3,26 +3,29 @@
       <ion-header>
           <ion-toolbar>
               <ion-buttons slot="start">
-                  <ion-back-button :default-href="pageDefaultBackLink"></ion-back-button>    
+                  <ion-back-button :default-href="pageDefaultBackLink" ></ion-back-button> 
+                  <ion-label slot="cantidad">Cantidad : {{this.suma}}</ion-label>                                  
+                  <ion-label class="sucursal" slot="sucursal">Sucursal : {{this.codSucursal}}</ion-label>                  
               </ion-buttons>
-              
               <ion-title>{{pageTitle}}</ion-title>
           </ion-toolbar>
       </ion-header>
 
       <ion-content :fullscreen="true">                       
-        <ion-searchbar placeholder="Código de artículo" ref="buscar" @ion-focus="OnFocus()" @keypress.enter="BuscarArticulo()" :debounce="1000" v-model="idArticulo" ></ion-searchbar>        
+        <ion-searchbar placeholder="Código de artículo" ref="buscar" @ion-focus="OnFocus()" @ionChange="BuscarArticulo()" @keypress.enter="BuscarArticulo()" :debounce="1000" v-model="idArticulo" ></ion-searchbar>        
       <ion-list>        
-        <ion-radio-group v-model="CodArticulo" @ionChange="handelArticulo($event)" checked="false" >     
+        <ion-radio-group v-model="CodArticulo" @ionChange="handelArticulo()" checked="false" >     
           <ion-row>
             <ion-col>
-              <ion-item  v-for="articulo in results" v-bind:key="articulo.fecha_Ingreso"> 
+              <ion-item  v-for="articulo in results" v-bind:key="articulo.iD_RM_StockRemitos_Articulos"> 
                 <ion-label class="labelCont">              
                  <ion-label class="desc">{{ articulo.descripcion }}</ion-label>
                  <ion-label class="articulo">Código:{{ articulo.idArticulo }}</ion-label>
                  <ion-label class="cantidad">Cant:{{ articulo.cantidad }}</ion-label> 
+                 
+                 <ion-label class="cantidad">Id:{{ articulo.iD_RM_StockRemitos_Articulos }}</ion-label> 
                 </ion-label>  
-                <ion-radio slot="start" :value="articulo.fecha_Ingreso"></ion-radio>         
+                <ion-radio slot="start" :value="articulo.iD_RM_StockRemitos_Articulos"></ion-radio>         
               </ion-item>
             </ion-col>
           </ion-row>  
@@ -58,15 +61,16 @@
     IonButtons,
     IonFooter,
     IonContent,
-    IonButton
-
-   
+    IonButton,
+    loadingController    
     
   } from '@ionic/vue';
   
-import { defineComponent, ref, } from "vue";
+import { defineComponent } from "vue";
 import axios from "axios";
-const API_URL = "http://9.39.252.72:6181/api";
+import { continueStatement } from '@babel/types';
+const API_URL = "http://9.39.252.247:6181/api";
+//const API_URL = "http://localhost:3164/api";
 
 
 export default defineComponent ({
@@ -89,10 +93,9 @@ export default defineComponent ({
         IonButtons,
         IonFooter,
         IonContent,
-        IonButton
-       
-      
+        IonButton     
     },
+    
    
     data() {
         return {
@@ -106,33 +109,164 @@ export default defineComponent ({
         focusBuscar:false,
         length:0,                  
         listaSucursales:[{idsucursal:"",sucursal:""}],
-        results:[{idArticulo:"",descripcion:"",cantidad:"", fecha_Ingreso:""}],       
+        results:[{idArticulo:"",descripcion:"",cantidad:"", fecha_Ingreso:"", iD_RM_StockRemitos_Articulos:""}],       
 
         CodArticulo:-1,   
         NombreSucursal:"",
 
         objSucursal:{nombre:"",codigo:""},
         remito:"",
-        lstArticulos:[{idArticulo:"",descripcion:"",cantidad:"",fecha_Ingreso:""}],
-        codSucursal:"001",
+        lstArticulos:[{idArticulo:"",descripcion:"",cantidad:"",fecha_Ingreso:"", iD_RM_StockRemitos_Articulos:""}],
+        codSucursal: localStorage.CodSucursal,
         focus:false,
         idArticulo:"",
-        objArticulo:{descripcion:"",idArticulo:"", cantidad:"",codigoBarra:"" ,fecha_Ingreso:"",edit:""},
+        objArticulo:{descripcion:"",idArticulo:"", cantidad:"",codigoBarra:"" ,fecha_Ingreso:"",edit:"", iD_RM_StockRemitos_Articulos:""},
 
+        timeout: 1000,
+        data:[{idArticulo:"",descripcion:"",cantidad:"",fecha_Ingreso:""}],
         show:"ok",
+
+        suma:0,
+       
         }; 
   },
 
   mounted() {
        this.remito=String(this.$route.query.codRemito)
-       this.CargarTodosLosArticulosRemito(this.remito);
-    }, 
- 
+       this.presentLoadingArticulos();       
+       //setInterval(this.CargarTodosLosArticulosRemito,1000,this.remito);
+       //this.CargarTodosLosArticulosRemito(this.remito);
+       this.TotalArticulos();
+       this.suma=0;
+       
+    },  
+  
+    
 
   methods: { 
-    handelArticulo(event:any){    
-      this.ValorRadio();
+    async presentLoadingSalvarRemito() {  
+        const loading = await loadingController
+          .create({
+            cssClass: 'my-custom-class',
+            message: 'Guardando artículo...',
+            duration: this.timeout,            
+          });
+        await loading.present();
+        await this.salvarRemito(this.remito,this.lstArticulos); 
+       
+       
+        if(this.data.length>1){
+                
+                loading.dismiss();
+                this.data=[];
+            }  
+            if(this.data.length===1){              
+              this.AlertCustomLoading();
+              loading.dismiss();
+              this.data=[];
+            }
+        
+      }, 
+ 
+    async presentLoadingEnviarRemito() {
+        const loading = await loadingController
+          .create({
+            cssClass: 'my-custom-class',
+            message: 'Enviando Remito...',
+            duration: this.timeout,            
+          });
+        await loading.present();
+      
+      setTimeout(() => {
+        this.EnviarRemito();       
+      }, this.timeout);
+
+      setTimeout(function() {
+          loading.dismiss()
+        }, this.timeout);
+
+        
+      }, 
+
+    async presentLoadingArticulos() {
+      this.suma=0;
+        const loading = await loadingController
+          .create({
+            cssClass: 'my-custom-class',
+            message: 'Cargando artículo...',                     
+          });
+        await loading.present();
+        await this.CargarTodosLosArticulosRemito(this.remito);  
+
+        setTimeout(() => {
+         
+            this.TotalArticulos();
+         
+            loading.dismiss();
+      }, 1000);
+        
+      }, 
+
+      TotalArticulos(){
+         //Contar los articulos 
+         this.suma=0;
+       for (let i = 0; i< this.results.length; i++) {
+          this.suma+=parseInt(this.results[i].cantidad);
+        }    
+      },
+
+      AlertCustomLoading() {
+      return alertController
+        .create({
+          header: 'Problemas con la conexión...', 
+          cssClass:'custom-alert',  
+
+          buttons: [            
+             {
+              text: 'Reintentar',
+              role: 'Reintentar',
+              cssClass: 'alert-button-enviarRM',
+                handler: () => {
+                  this.presentLoadingArticulos();
+                },
+              },                  
+              {
+              text: 'Cancel',
+              role: 'Cancel',
+              cssClass: 'alert-button-cancelRM',
+                handler: () => {
+                  //console.log(" Cancelando ....");
+                },
+            }, 
+          ]
+            
+        }).then(a => a.present())
+      
+      },
+   
+
+    handelArticulo(){  
+        
+      this.presentLoadingRadios();
     },  
+
+      
+      
+    async presentLoadingRadios() {
+        const loading = await loadingController
+          .create({
+            cssClass: 'my-custom-class',
+            message: 'Cargando artículo...'
+                       
+          });
+        await loading.present();
+      
+      setTimeout(() => {
+        this.ValorRadio();          
+        loading.dismiss()   
+      },1000);
+
+      }, 
 
     alert(msj:string, head:string) {
       return alertController
@@ -156,7 +290,8 @@ export default defineComponent ({
               cssClass: 'alert-button-enviarRM',
                 handler: () => {
                   console.log(" Enviando Remito ....");
-                  this.EnviarRemito();
+                  //this.EnviarRemito();
+                  this.presentLoadingEnviarRemito();
                 },
               },                  
               {
@@ -175,72 +310,81 @@ export default defineComponent ({
    
 
 
-    ValorRadio(){       
+    ValorRadio(){    
+      
         localStorage.CodArticulo =this.CodArticulo;
         for(var i = 0 ; i <= this.results.length-1; i++)
         {
-          if(this.results[i].fecha_Ingreso==localStorage.CodArticulo){
+          if(this.results[i].iD_RM_StockRemitos_Articulos===localStorage.CodArticulo){
             this.objArticulo.idArticulo=this.results[i].idArticulo;
             this.objArticulo.descripcion=this.results[i].descripcion;
             this.objArticulo.cantidad=this.results[i].cantidad;
             this.objArticulo.fecha_Ingreso=this.results[i].fecha_Ingreso;
+            this.objArticulo.iD_RM_StockRemitos_Articulos=this.results[i].iD_RM_StockRemitos_Articulos;
             this.objArticulo.edit="true";
             break;
           }
         }
-        this.PresentAlertPromptArticulo(this.objArticulo);       
+        this.PresentAlertPromptArticulo(this.objArticulo);  
+            
     },
 
-    salvarRemito(idremito: string, articulos: any[]) {        
-      axios.put( API_URL+"/admon/save_rm_remito?remito="+idremito+"", articulos)
-        .then((response) => {          
-         this.CargarTodosLosArticulosRemito(idremito);
+   salvarRemito(idremito: string, articulos: any[]) {     
+     axios.put( API_URL+"/admon/save_rm_remito?remito="+idremito+"", articulos)
+        .then((response) => {  
+         response.data;
         })
         .catch((error) => console.log(error));
+        
     },
-    
-    EnviarRemito() {            
-      axios.put(API_URL+"/admon/send_rm_remito?remito="+this.remito+"", this.lstArticulos)
+  
+    async EnviarRemito() {              
+      await axios.post(API_URL+"/admon/enviar_remito?remito="+this.remito+"")
         .then((response) => {          
        
-         this.$router.push({path:'/home'});
+         this.$router.push({path:'/home',query: { sucursal: localStorage.nombre, CodSucursal:localStorage.CodSucursal}});
         })
         .catch((error) => console.log(error));
     },
 
-    CargarArticulosPorCodRemitoYCodSucursal(){
-      axios.get(API_URL+"/admon/get_rm_remito?remito="+this.remito +"&sucursal="+this.codSucursal+"")
+    async CargarArticulosPorCodRemitoYCodSucursal(){
+      await axios.get(API_URL+"/admon/get_rm_remito?remito="+this.remito +"&sucursal="+this.codSucursal+"")
         .then((response) => {          
           this.lstArticulos= response.data;
           this.results=this.lstArticulos;
           console.log(this.results);
         }).catch((error) => console.log(error));
 
-    },       
-    CargarTodosLosArticulosRemito(remito:string) {    
-      axios.get(API_URL+"/admon/get_rm_remito_articles?remito="+remito+"")
-        .then((response) => {
+    },  
+    
+     CargarTodosLosArticulosRemito(remito:string) {  
+    
+       axios.get(API_URL+"/admon/get_articles_por_remito?remito="+remito+"")
+        .then((response) => {          
           this.lstArticulos= response.data;
-          this.results=this.lstArticulos;
-          console.log(this.results);       
+          this.results=this.lstArticulos;               
+          this.data= response.data;
         })
         .catch((error) => console.log(error));
     }, 
     OnFocus(){
       this.focusBuscar=true;     
+      
     }, 
+ 
     
-  BuscarArticulo(){    
+  async BuscarArticulo(){    
     if (this.idArticulo!=="" && this.focusBuscar) { 
 
-      this.CargarTodosLosArticulosRemito(this.remito);          
-       axios.get(API_URL+"/admon/get_search_articles?articulo="+this.idArticulo+"")
+      this.CargarTodosLosArticulosRemito(this.remito);
+       await axios.get(API_URL+"/admon/get_search_articles?articulo="+this.idArticulo+"")
         .then((response) => {
           this.objArticulo=response.data[0];
           if(this.objArticulo.idArticulo==null){
             this.Alert();  
             this.idArticulo="";          
-          }else{
+          }
+          if(this.objArticulo.idArticulo!=null){
             this.PresentAlertPromptArticulo(this.objArticulo);
           }
         })
@@ -248,17 +392,18 @@ export default defineComponent ({
         
       }
     },
-    EditarArticulo(idArticulo:string){       
+    async EditarArticulo(idArticulo:string){       
     if (this.idArticulo) { 
 
       this.CargarTodosLosArticulosRemito(this.remito);          
-       axios.get(API_URL+"/admon/get_search_articles?articulo="+this.idArticulo+"")
+       await axios.get(API_URL+"/admon/get_search_articles?articulo="+this.idArticulo+"")
         .then((response) => {
           this.objArticulo=response.data[0];
           if(this.objArticulo.idArticulo==null){
             this.Alert();  
             this.idArticulo="";          
-          }else{
+          }
+          if(this.objArticulo.idArticulo!=null){
             this.PresentAlertPromptArticulo(this.objArticulo);
           }
         })
@@ -270,13 +415,14 @@ export default defineComponent ({
   remove:function(i:any){
      this.lstArticulos.splice(i,1)
     },
-    Alert() {
-      return alertController
+    async Alert() {
+      const a=await alertController
         .create({
-          header: '¡Upsss!',          
+          header: '¡Upsss!',
           message: 'No se encontro el artículo!',
           buttons: ['OK'],
-        }).then(a => a.present());
+        });
+      return await a.present();
     },
     
     PresentAlertPromptArticulo(obj:any) {
@@ -302,68 +448,106 @@ export default defineComponent ({
             },
            
           ],
-          buttons: [            
-         /*    {
-              text: 'Cancel',
-              role: 'Cancel',
-              cssClass: 'alert-button-cancel',
-              handler: () => {
-                console.log(" Cancelando ....");
-              },
-            }, */
-            {
+          buttons: [          
+            {//Eliminar
               text: 'Eliminar',
               role: 'Eliminar',
-              cssClass: 'alert-button-delete',
+              cssClass: 'alert-button-delete',              
               handler: () => {                
-              
-                for (let i = 0; i < this.lstArticulos.length; i++) {
-                  
-                  if(this.lstArticulos[i].fecha_Ingreso==obj.fecha_Ingreso)
+                for (let i = 0; i < this.lstArticulos.length; i++) 
                   {
-                     this.remove(i);
-                    break;
-                  }                  
-                } 
-                this.salvarRemito(this.remito,this.lstArticulos);                      
+                    if(this.lstArticulos[i].iD_RM_StockRemitos_Articulos==obj.iD_RM_StockRemitos_Articulos)
+                      {
+                        this.remove(i);                    
+                        break;
+                      }                
+                  }
+
+                //Insertar la lista de elementos
+              
+                axios.put( API_URL+"/admon/delete_articulo?Id="+obj.iD_RM_StockRemitos_Articulos+"")
+                  .then((response) => {  
+                    //  axios.get(API_URL+"/admon/get_rm_remito_articles?remito="+this.remito+"")
+                    //       .then((response) => {                  
+                    //         this.lstArticulos= response.data;
+                    //         this.results=this.lstArticulos;                 
+                    //         this.data= response.data;                  
+                    //     }) 
+                }).catch((error) => console.log(error));
+                           
               },
             },
-            {
+            
+            {//Guardar
               text: 'Guardar',
               cssClass: 'alert-button-guardar',
               handler: (alertData) => {                         
-                obj.cantidad=alertData.Cantidad;       
-                if(obj.edit=="true")
-                {       
-                      
-                  for (let i = 0; i < this.lstArticulos.length; i++) {
-                  
-                    if(this.lstArticulos[i].fecha_Ingreso==obj.fecha_Ingreso)
+                obj.cantidad=alertData.Cantidad; 
+
+              
+              if(obj.edit=="true")//Modificar
+              {                      
+                  for (let i = 0; i < this.lstArticulos.length; i++) 
+                  {                  
+                    if(this.lstArticulos[i].iD_RM_StockRemitos_Articulos==obj.iD_RM_StockRemitos_Articulos)
                     {
                       this.lstArticulos[i].cantidad=obj.cantidad;
                       break;
                     }                  
-                  } 
-                 
-                  
-                }
-                else
-                {
-                    this.lstArticulos.push(obj);  
-                    this.lstArticulos.reverse();  
-                    //this.salvarRemito(this.remito,this.lstArticulos);
-                   
-                }
+                  }
                 
-                this.idArticulo="";
-                this.focusBuscar=false;
-                //this.CargarTodosLosArticulosRemito(this.remito);
-                this.salvarRemito(this.remito,this.lstArticulos);
-              },
+              
+                  //Insertar la lista de elementos
+                  axios.put(API_URL+"/admon/update_articulo?Id="+ obj.iD_RM_StockRemitos_Articulos+"&"+"Cantidad="+obj.cantidad)
+                    .then((response) => {  
+                      //Cargar todos los artículos por remito
+                         axios.get(API_URL+"/admon/get_articles_por_remito?remito="+this.remito+"")
+                          .then((response) => {                  
+                            this.lstArticulos= response.data;
+                            this.results=this.lstArticulos;                 
+                            this.data= response.data;                  
+                        }) 
+                  }).catch((error) => console.log(error));
+                 
+                }
+                  else //Guardar
+                  { 
+
+                    this.lstArticulos.push(obj);                   
+                    //Insertar la lista de elementos                 
+                    axios.post( API_URL+"/admon/insertar_articulo_remito?remito="+this.remito+"&Id="+ obj.idArticulo+"&Cantidad="+obj.cantidad)
+                      .then((response) => {  
+
+                        axios.get(API_URL+"/admon/get_articles_por_remito?remito="+this.remito+"")
+                          .then((response) => {                                            
+                            this.lstArticulos= response.data;
+                            this.results=this.lstArticulos;                 
+                            this.data= response.data;                            
+                            })                           
+                    })
+                    .catch((error) => console.log(error));                    
+                   
+                  }
+                  
+                  this.idArticulo="";
+                  this.focusBuscar=false;
+                  
+                  
+                  // window.location.reload();
+                  // this.$router.push("/productos?codRemito=test50");
+                  
+                  //Actualiza la variable suma
+                
+                  this.TotalArticulos();
+                },              
+                
             },
+            
           ],
         })
         .then(a => a.present())
+
+        
     },
    
    onFocus() {    
@@ -452,11 +636,17 @@ export default defineComponent ({
     margin-left:70%;
     font-size:14px !important;
   }
+  .sucursal{
+    margin-left:100px !important;
+    
+  }
   #footer
   {
       display: block !important;
       text-align: center;
-      /*position:relative;*/
+      position:absolute;
+      margin-top: 145%;
+      background-color: transparent;
       
   }
 

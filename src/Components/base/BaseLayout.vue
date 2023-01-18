@@ -3,8 +3,12 @@
         <ion-header>
             <ion-toolbar>
                 <ion-buttons slot="start">
-                    <ion-back-button :default-href="pageDefaultBackLink"></ion-back-button>    
+                    <ion-back-button :default-href="pageDefaultBackLink"></ion-back-button>                       
                 </ion-buttons>
+
+                <ion-label slot="cantidad"></ion-label>
+                <ion-label slot="Sucursal"></ion-label>
+                
                 
                 <ion-title>{{pageTitle}}</ion-title>
             </ion-toolbar>
@@ -15,8 +19,7 @@
                 <slot></slot>                    
             </div>
         </ion-content>
-    </ion-page>
-   
+    </ion-page>   
 </template>
 
 <script lang="ts">
@@ -28,6 +31,7 @@ import{
     IonToolbar,
     IonBackButton,
     IonButtons,
+    IonLabel,
    
 }from "@ionic/vue";
 
@@ -40,7 +44,8 @@ export default{
     IonTitle,
     IonToolbar,  
     IonBackButton,
-    IonButtons, 
+    IonButtons,
+    IonLabel,
     },
     data() {
         return {    

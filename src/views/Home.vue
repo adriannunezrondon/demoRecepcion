@@ -1,39 +1,49 @@
-<template>  
+<template> 
+    <ion-page>
+        <ion-header>
+            <ion-toolbar>
+                <ion-buttons slot="start">
+                    <ion-title>Tienda</ion-title> 
+                    
+                    <div v-if="this.$route.query.CodSucursal!=null">
+                      
+                      <ion-label class="sucursal" slot="sucursal">Sucursal: {{this.$route.query.sucursal}}-{{this.$route.query.CodSucursal}}</ion-label> 
+                    </div>
+                    <div v-else>
+                      
+                      <ion-label class="sucursal" slot="sucursal">Sucursal: {{this.nombreSucursal}}-{{this.codSucursal}}</ion-label> 
+                    </div>
+                                                        
+                </ion-buttons>
+               
+            </ion-toolbar>
+        </ion-header>
 
-
-        <base-layout pageTitle=Tienda>
-           <!--  <div id="nav">              
-              <ion-button :router-link="{ name: 'Productos' }">Click Me</ion-button>
-            </div>  -->    
-            <ion-card class="card">    
-             {{$route.query.sucursal}}   
-             {{$route.query.CodSucursal}} 
-            
-             
-
-                <ion-card-header>
-                  <!-- <ion-card-subtitle>Destination</ion-card-subtitle> -->
+        <ion-content :fullscreen="true">                       
+          <ion-card class="card">
+              <ion-card-header>
+                <!-- <ion-card-subtitle>Destination</ion-card-subtitle> -->
                   <ion-card-title class="title">Ingresar o escanear el remito</ion-card-title>
-                </ion-card-header>
+              </ion-card-header>
+
                 <ion-card-content>
-                  <form class="formulario" @submit.prevent="submitFrom">
+                    <form class="formulario" @submit.prevent="submitFrom">
                     <ion-list>
 
-                        <ion-item>
-                          <ion-label  class="labelCodigo" position="floating">Código</ion-label>
-                          <ion-input class="codigo" type="text" required v-model="entreCodigo"/>                    
-                        </ion-item>                      
-                        
+                      <ion-item>
+                        <ion-label  class="labelCodigo" position="floating">Código</ion-label>
+                        <ion-input class="codigo" type="text" required v-model="entreCodigo"/>                    
+                      </ion-item>                      
+                      
                     </ion-list>
                     <ion-button type="submit"  color="success" expand="block">CONTINUAR</ion-button>  
                     <ion-button  @click="mostararSucursales()" expand="block">SELECCIONAR SUCURSALES</ion-button>                
-                  </form>                  
-                    
+                    </form>                  
+            
                 </ion-card-content>
-              </ion-card>
-                        
-              
-        </base-layout>  
+          </ion-card> 
+        </ion-content>
+    </ion-page>
 </template>
 
 <script lang="ts">
@@ -42,14 +52,31 @@ import {
   IonItem,
     IonList,
     IonInput,
-    IonLabel,IonCard, IonCardContent, IonCardHeader, IonCardTitle, alertController, 
+    IonLabel,
+    IonCard, 
+    IonCardContent,
+    IonCardHeader, 
+    IonCardTitle, 
+    alertController,
+    IonHeader,
+    IonPage,
+    IonTitle,
+    IonToolbar,
+    IonButtons,
+    IonContent,
+    loadingController   
    
 } from "@ionic/vue";
 import axios from "axios";
 const API_URL = "http://9.39.252.72:6181/api";
 
+//const API_URL = "http://localhost:3164/api";
+
+
 import { defineComponent} from "vue";
 import { useRouter} from 'vue-router';
+
+
 export default defineComponent({
   name: "App",
   components: {   
@@ -57,9 +84,21 @@ export default defineComponent({
     IonItem,
     IonList,
     IonInput,
-    IonLabel,IonCard, IonCardContent, IonCardHeader, IonCardTitle,
+    IonLabel,
+    IonCard, 
+    IonCardContent, 
+    IonCardHeader, 
+    IonCardTitle,
+    IonHeader,
+    IonPage,
+    IonTitle,
+    IonToolbar,
+    IonButtons,
+    IonContent
   },
-  props: ['foo'],
+  props: {
+    
+  },
   data() {
     return {
      
@@ -71,16 +110,18 @@ export default defineComponent({
       result:[],
       remito:{estado:"",idStockRemito:"", sucursal:""},
       estadoRemito:"",
-      CodSucuarsal:this.$route.query.CodSucursal,
-      NombreSucursal:this.$route.query.sucursal,
+      codSucursal: localStorage.CodSucursal,
+      nombreSucursal:localStorage.nombre,
+     
     }; 
   },
    mounted() {   
-        this.NombreSucursal=localStorage.nombre;
-        this.CodSucuarsal=localStorage.CodSucuarsal;       
+        this.codSucursal=localStorage.CodSucursal;
+        this.nombreSucursal=localStorage.nombre;
     }, 
 
    methods: {
+
     Alert(msj:any) {
       return alertController
         .create({
@@ -97,10 +138,11 @@ export default defineComponent({
             
     },
 
-    submitFrom(){        
+    submitFrom(){    
+        
       axios.get(API_URL+"/admon/get_rm_remito?remito="+this.entreCodigo+"&sucursal="+localStorage.CodSucursal+"")
         .then((response) => {               
-        this.remito=response.data[0];        
+        this.remito=response.data[0];            
           if(this.remito.estado=='T'){
               this.Alert("El remito " + this.entreCodigo + " ya ha sido transferido");
               return;
@@ -110,6 +152,7 @@ export default defineComponent({
               this.Alert("Ingresa un remito válido!");
               return;
             }
+            
           this.$router.push({path:'/productos', query:{codRemito: this.entreCodigo}});
             
         }).catch((error) => this.Alert("Este remito no pertenece a esta sucursal o existe problema de conexión"))
@@ -117,7 +160,7 @@ export default defineComponent({
         
                     
     },
-    mostararSucursales(){        
+    mostararSucursales(){
           this.$router.push("/sucursales");        
     }
 
@@ -128,6 +171,9 @@ export default defineComponent({
 
 // scoped limita el css solo para este componente
 <style scoped>
+ ion-spinner {
+    color: blue;
+    }
     button > * {
         pointer-events: none;
         cursor: pointer;
@@ -148,6 +194,10 @@ export default defineComponent({
     {
       background-color: brown;
         display: none !important;
-    }    
+    }   
+    .sucursal{
+    margin-left:25px !important;
+    
+  } 
 </style>
 
