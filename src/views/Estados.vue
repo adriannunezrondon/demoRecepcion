@@ -1,6 +1,9 @@
 <template>
    
-    <base-layout pageTitle="Estados de remitos del día" page-default-back-link="/home">
+    <base-layout pageTitle="Estados de últimos remitos" page-default-back-link="/home">
+        <p>
+            Se muestran los remitos de las <ion-text color="danger">útimas 24 horas.</ion-text> 
+        </p>
                 <ion-grid  :fixed="true" padding class="tab5-content">
                     <ion-row class="cabecera">
                         <ion-col>Remito</ion-col>
@@ -14,7 +17,7 @@
                             <ion-col class=clnEstado>{{'Pendiente'}}</ion-col>
                         </div>
                         <div v-if="remito.estado==='T'">
-                            <ion-col class=clnEstado>{{'Tranferido'}}</ion-col>
+                            <ion-col class=clnEstado>{{'Transferido'}}</ion-col>
                         </div>
                         <div v-if="remito.estado==='G'">
                             <ion-col class=clnEstado>{{'Guardado'}}</ion-col>
@@ -31,9 +34,11 @@
     import { 
       IonCol,
       IonRow,
-      IonGrid 
+      IonGrid,
+     
+      IonText
     } from '@ionic/vue';
-   
+  
   import { defineComponent, ref} from "vue";
   import axios from "axios";
   const API_URL = "http://9.39.252.247:6181/api";
@@ -44,7 +49,9 @@
       components: {                                           
           IonCol,
           IonRow, 
-          IonGrid
+          IonGrid, 
+          
+          IonText
       },
 
     mounted() {

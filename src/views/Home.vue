@@ -43,7 +43,7 @@
                     </ion-list>
                     <ion-button type="submit"  color="success" expand="block">CONTINUAR</ion-button>  
                     <ion-button  @click="mostararSucursales()" expand="block">SELECCIONAR SUCURSALES</ion-button>   
-                    <ion-button  @click="mostararEstadoRemitosDelDia()" expand="block">ESTADO REMITOS DEL DIA</ion-button>              
+                    <ion-button  @click="mostararEstadoRemitosDelDia()" expand="block">ESTADO ÚLTIMOS REMITOS</ion-button>              
                     </form>                  
             
                 </ion-card-content>
