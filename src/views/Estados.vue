@@ -1,9 +1,16 @@
 <template>
    
     <base-layout pageTitle="Estados de últimos remitos" page-default-back-link="/home">
-        <p>
+        <p class="parrafo">
             Se muestran los remitos de las <ion-text color="danger">útimas 24 horas.</ion-text> 
         </p>
+        
+            <p class="parrafo"><ion-text color="primary">Guardado</ion-text>:El remito y las unidades están guardados en base datos Mosca.</p>
+            <p class="parrafo"><ion-text color="danger">Pendiente</ion-text>:El remito está enviado por la sucursal y pendiente a que Poscomm lo procese. </p>
+            <p class="parrafo"><ion-text color="warning">Transferido</ion-text>:El remito ya fue procesado por Poscomm y cargado con éxito.</p> 
+            
+
+    
                 <ion-grid  :fixed="true" padding class="tab5-content">
                     <ion-row class="cabecera">
                         <ion-col>Remito</ion-col>
@@ -92,6 +99,10 @@
    .filas{
         font-size: 10px;
         
+   }
+   .parrafo{
+    font-size: 12px;
+    text-justify: auto;
    }
    .clnEstado{
     margin-right: 60px;
