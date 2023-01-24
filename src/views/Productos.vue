@@ -1,9 +1,11 @@
-<template>    
+<template> 
+  
   <ion-page>
+    <base-layout page-default-back-link="/home">
       <ion-header>
           <ion-toolbar>
               <ion-buttons slot="start">
-                  <ion-back-button :default-href="pageDefaultBackLink" ></ion-back-button> 
+                 
                   <ion-label slot="cantidad">Cantidad : {{this.suma}}</ion-label>                                  
                   <ion-label class="sucursal" slot="sucursal">Sucursal : {{this.codSucursal}}</ion-label>                  
               </ion-buttons>
@@ -31,7 +33,8 @@
           </ion-row>  
         </ion-radio-group>      
     </ion-list>
-      </ion-content>       
+      </ion-content> 
+    </base-layout>  
 
       <ion-footer  id="footer">
                   <div id="divfooter">            
@@ -39,7 +42,7 @@
                   </div> 
       </ion-footer>
   </ion-page>
- 
+
 </template>
 
 <script lang="ts">
@@ -57,12 +60,14 @@
     IonPage,
     IonTitle,
     IonToolbar,
-    IonBackButton,
+    //IonBackButton,
     IonButtons,
     IonFooter,
     IonContent,
     IonButton,
-    loadingController    
+    loadingController,
+   
+
     
   } from '@ionic/vue';
   
@@ -89,7 +94,7 @@ export default defineComponent ({
         IonPage,
         IonTitle,
         IonToolbar,
-        IonBackButton,
+        //IonBackButton,
         IonButtons,
         IonFooter,
         IonContent,
@@ -131,8 +136,8 @@ export default defineComponent ({
         }; 
   },
 
-  mounted() {
-       this.remito=String(this.$route.query.codRemito)
+  mounted() {    
+       this.remito=localStorage.CodRemito
        this.presentLoadingArticulos();       
        //setInterval(this.CargarTodosLosArticulosRemito,1000,this.remito);
        //this.CargarTodosLosArticulosRemito(this.remito);
@@ -335,14 +340,15 @@ export default defineComponent ({
          response.data;
         })
         .catch((error) => console.log(error));
-        
     },
   
     async EnviarRemito() {              
       await axios.post(API_URL+"/admon/enviar_remito?remito="+this.remito+"")
-        .then((response) => {          
-       
-         this.$router.push({path:'/home',query: { sucursal: localStorage.nombre, CodSucursal:localStorage.CodSucursal}});
+        .then((response) => {         
+         
+         this.$router.replace({path:'/home',query: { sucursal: localStorage.nombre, CodSucursal:localStorage.CodSucursal}});
+         
+         
         })
         .catch((error) => console.log(error));
     },

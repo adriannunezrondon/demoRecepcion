@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
+import { getCurrentInstance } from 'vue'
 
 
 const routes: Array<RouteRecordRaw> = [
@@ -33,12 +34,21 @@ const routes: Array<RouteRecordRaw> = [
     props:true,
     component: () => import('@/views/Productos.vue'),    
   },
+
+  {
+    path: '/estados',
+    name: 'estados',
+    props:true,
+    component: () => import('@/views/Estados.vue'),    
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
 })
+
+
 export default router
 
 //API_URL = "http://localhost:3164/api";

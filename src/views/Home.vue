@@ -3,16 +3,21 @@
         <ion-header>
             <ion-toolbar>
                 <ion-buttons slot="start">
-                    <ion-title>Tienda</ion-title> 
-                    
-                    <div v-if="this.$route.query.CodSucursal!=null">
-                      
-                      <ion-label class="sucursal" slot="sucursal">Sucursal: {{this.$route.query.sucursal}}-{{this.$route.query.CodSucursal}}</ion-label> 
+
+                    <div v-if="this.$route.query.CodSucursal!=null"> 
+                      <ion-title>{{this.$route.query.sucursal}}</ion-title> 
                     </div>
                     <div v-else>
-                      
-                      <ion-label class="sucursal" slot="sucursal">Sucursal: {{this.nombreSucursal}}-{{this.codSucursal}}</ion-label> 
+                      <ion-title>{{this.nombreSucursal}}</ion-title>
                     </div>
+                    
+                    
+                    <!-- <div v-if="this.$route.query.CodSucursal!=null">                      
+                      <ion-label class="sucursal" slot="sucursal">Sucursal: {{this.$route.query.sucursal}}-{{this.$route.query.CodSucursal}}</ion-label> 
+                    </div>
+                    <div v-else>                      
+                      <ion-label class="sucursal" slot="sucursal">Sucursal: {{this.nombreSucursal}}-{{this.codSucursal}}</ion-label> 
+                    </div> -->
                                                         
                 </ion-buttons>
                
@@ -37,7 +42,8 @@
                       
                     </ion-list>
                     <ion-button type="submit"  color="success" expand="block">CONTINUAR</ion-button>  
-                    <ion-button  @click="mostararSucursales()" expand="block">SELECCIONAR SUCURSALES</ion-button>                
+                    <ion-button  @click="mostararSucursales()" expand="block">SELECCIONAR SUCURSALES</ion-button>   
+                    <ion-button  @click="mostararEstadoRemitosDelDia()" expand="block">ESTADO REMITOS DEL DIA</ion-button>              
                     </form>                  
             
                 </ion-card-content>
@@ -118,6 +124,7 @@ export default defineComponent({
    mounted() {   
         this.codSucursal=localStorage.CodSucursal;
         this.nombreSucursal=localStorage.nombre;
+        this.entreCodigo="";
     }, 
 
    methods: {
@@ -138,30 +145,48 @@ export default defineComponent({
             
     },
 
-    submitFrom(){    
-        
+
+    submitFrom(){ 
+      
+        if(localStorage.CodSucursal==null){
+              this.Alert("Selecciona una sucursal");
+              return;
+            }  
+        if(this.entreCodigo==""){
+              this.Alert("Este campo no puede estar en blanco");
+              return;
+          } 
+          if(!this.validaRemito(this.entreCodigo)){
+              this.Alert("Ingresa un remito válido!");
+              return;
+            }     
+            
       axios.get(API_URL+"/admon/get_rm_remito?remito="+this.entreCodigo+"&sucursal="+localStorage.CodSucursal+"")
-        .then((response) => {               
-        this.remito=response.data[0];            
+        .then((response) => {
+          this.remito=response.data[0];            
           if(this.remito.estado=='T'){
               this.Alert("El remito " + this.entreCodigo + " ya ha sido transferido");
               return;
             }
-
-          if(!this.validaRemito(this.entreCodigo)){
-              this.Alert("Ingresa un remito válido!");
+            if(this.remito.estado=='P'){
+              this.Alert("El remito " + this.entreCodigo + " ya ha sido enviado");
               return;
-            }
-            
-          this.$router.push({path:'/productos', query:{codRemito: this.entreCodigo}});
+            }          
+            localStorage.CodRemito=this.entreCodigo;
+            this.$router.replace({path:'/productos'});
+            this.entreCodigo="";
+
+         
             
         }).catch((error) => this.Alert("Este remito no pertenece a esta sucursal o existe problema de conexión"))
-
-        
-                    
     },
+
     mostararSucursales(){
           this.$router.push("/sucursales");        
+    },
+
+    mostararEstadoRemitosDelDia(){
+          this.$router.push("/estados");        
     }
 
   },
@@ -179,13 +204,17 @@ export default defineComponent({
         cursor: pointer;
         width: 80%;
     }  
-    .formulario{    
+    .formulario{ 
+      margin-top: 0px !important;   
       width: 80%;   
       margin-left: 10%;
     }
+    .card-content-md{
+      margin-top: -17px;
+    }
     .card{
-      margin-top: 50%;
-      height:50% ;
+      margin-top: 30%;
+      height:60% ;
     }
     .title{
       text-align:center;
