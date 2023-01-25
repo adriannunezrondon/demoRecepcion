@@ -1,7 +1,8 @@
-# Ionic / Vue.js generated files
-node_modules/
-dist/
+# Ionic Framework cache
+.ionic/
 
-# Ionic / Vue.js build files
-platforms/
-plugins/
+# Ionic Framework build output
+www/
+
+# Vue.js build output
+dist/
